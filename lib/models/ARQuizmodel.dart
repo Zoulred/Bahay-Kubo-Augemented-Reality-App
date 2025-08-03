@@ -63,8 +63,7 @@ class Quiz {
     };
   }
 
-  factory Quiz.fromJson(Map<Str$env:GIT_AUTHOR_DATE="2025-08-01 14:30:00"
-$env:GIT_COMMITTER_DATE="2025-08-01 14:30:00"ing, dynamic> json) {
+  factory Quiz.fromJson(Map<String, dynamic> json) {
     return Quiz(
       id: json['id'],
       title: json['title'],
