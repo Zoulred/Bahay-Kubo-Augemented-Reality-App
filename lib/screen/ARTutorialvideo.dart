@@ -423,70 +423,125 @@ class _TutorialVideoPageState extends State<TutorialVideoPage> {
     );
   }
 
-  Widget _buildControlButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    bool isPrimary = false,
-  }) {
-    return Column(
-      children: [
-        Container(
-          width: isPrimary ? 60 : 50,
-          height: isPrimary ? 60 : 50,
-          decoration: BoxDecoration(
-            gradient: isPrimary
-                ? LinearGradient(
-                    colors: [
-                      Colors.green[600]!,
-                      Colors.brown[600]!,
-                    ],
-                  )
-                : LinearGradient(
-                    colors: [
-                      Colors.green[100]!,
-                      Colors.brown[100]!,
-                    ],
-                  ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.brown[300]!.withOpacity(0.5),
-                blurRadius: 6,
-                offset: const Offset(2, 2),
-              ),
-            ],
-            border: Border.all(
-              color: isPrimary ? Colors.white : Colors.brown[300]!,
-              width: 2,
-            ),
-          ),
-          child: IconButton(
-            icon: Icon(
-              icon,
-              color: isPrimary ? Colors.white : Colors.green[700],
-              size: isPrimary ? 28 : 22,
-            ),
-            onPressed: onPressed,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.brown[700],
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
+  // ==================== CONTROL BUTTON METHODS ====================
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
+Widget _buildControlButton({
+  required IconData icon,
+  required String label,
+  required VoidCallback onPressed,
+  bool isPrimary = false,
+}) {
+  return Column(
+    children: [
+      _buildButtonContainer(icon, label, onPressed, isPrimary),
+      const SizedBox(height: 4),
+      _buildButtonLabel(label, isPrimary),
+    ],
+  );
+}
+
+// Helper method to build button container
+Container _buildButtonContainer(
+  IconData icon,
+  String label,
+  VoidCallback onPressed,
+  bool isPrimary,
+) {
+  return Container(
+    width: isPrimary ? 60 : 50,
+    height: isPrimary ? 60 : 50,
+    decoration: _buildButtonDecoration(isPrimary),
+    child: _buildIconButton(icon, onPressed, isPrimary),
+  );
+}
+
+// Helper method to build button decoration
+BoxDecoration _buildButtonDecoration(bool isPrimary) {
+  return BoxDecoration(
+    gradient: isPrimary ? _buildPrimaryGradient() : _buildSecondaryGradient(),
+    shape: BoxShape.circle,
+    boxShadow: [_buildButtonShadow()],
+    border: Border.all(
+      color: isPrimary ? Colors.white : Colors.brown[300]!,
+      width: 2,
+    ),
+  );
+}
+
+// Helper method to build primary gradient
+LinearGradient _buildPrimaryGradient() {
+  return LinearGradient(
+    colors: [
+      Colors.green[600]!,
+      Colors.brown[600]!,
+    ],
+  );
+}
+
+// Helper method to build secondary gradient
+LinearGradient _buildSecondaryGradient() {
+  return LinearGradient(
+    colors: [
+      Colors.green[100]!,
+      Colors.brown[100]!,
+    ],
+  );
+}
+
+// Helper method to build button shadow
+BoxShadow _buildButtonShadow() {
+  return BoxShadow(
+    color: Colors.brown[300]!.withOpacity(0.5),
+    blurRadius: 6,
+    offset: const Offset(2, 2),
+  );
+}
+
+// Helper method to build icon button
+IconButton _buildIconButton(
+  IconData icon,
+  VoidCallback onPressed,
+  bool isPrimary,
+) {
+  return IconButton(
+    icon: Icon(
+      icon,
+      color: isPrimary ? Colors.white : Colors.green[700],
+      size: isPrimary ? 28 : 22,
+    ),
+    onPressed: onPressed,
+  );
+}
+
+// Helper method to build button label
+Widget _buildButtonLabel(String label, bool isPrimary) {
+  return Text(
+    label,
+    style: TextStyle(
+      color: Colors.brown[700],
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+    ),
+  );
+}
+
+// ==================== DURATION FORMATTING METHODS ====================
+
+String _formatDuration(Duration duration) {
+  final minutes = _formatTwoDigits(duration.inMinutes.remainder(60));
+  final seconds = _formatTwoDigits(duration.inSeconds.remainder(60));
+  return '$minutes:$seconds';
+}
+
+// Helper method to format two digits
+String _formatTwoDigits(int n) {
+  return n.toString().padLeft(2, '0');
+}
+
+// Alternative formatting method (optional, kept for compatibility)
+String _formatDurationAlt(Duration duration) {
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  return '$minutes:$seconds';
 }
