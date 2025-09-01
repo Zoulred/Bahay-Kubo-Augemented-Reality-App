@@ -2401,47 +2401,146 @@ Widget _buildEmptyRecipesState() {
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _showVegetableList
-          ? null
-          : AppBar(
-              title: const Text(
-                'AR Vegetable Scanner',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.white,
-                ),
-              ),
-              backgroundColor: Colors.green[700],
-              iconTheme: const IconThemeData(
-                color: Colors.white,
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.list,
-                      color: Color.fromARGB(250, 255, 255, 255)),
-                  onPressed: _showVegetableListScreen,
-                  tooltip: 'View Vegetable List',
-                ),
-              ],
-            ),
-      body: _showVegetableList
-          ? _buildVegetableList()
-          : Stack(
-              children: [
-                _buildCameraPreview(),
-                if (_showVegetableAnimation) _buildVegetableAnimation(),
-                if (_scannedVegetable.isNotEmpty && !_showVegetableAnimation)
-                  _buildVegetableInfo(),
-                _buildCaptureButton(),
-              ],
-            ),
-    );
-  }
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: _buildAppBar(),
+    body: _buildBody(),
+  );
 }
 
-enum CornerPosition { TopLeft, TopRight, BottomLeft, BottomRight }
+// ==================== APP BAR METHODS ====================
+
+AppBar? _buildAppBar() {
+  if (_showVegetableList) return null;
+  
+  return AppBar(
+    title: const Text(
+      'AR Vegetable Scanner',
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+        color: Colors.white,
+      ),
+    ),
+    backgroundColor: Colors.green[700],
+    iconTheme: const IconThemeData(color: Colors.white),
+    actions: [_buildAppBarActions()],
+  );
+}
+
+Widget _buildAppBarActions() {
+  return IconButton(
+    icon: const Icon(
+      Icons.list,
+      color: Color.fromARGB(250, 255, 255, 255),
+    ),
+    onPressed: _showVegetableListScreen,
+    tooltip: 'View Vegetable List',
+  );
+}
+
+// ==================== BODY METHODS ====================
+
+Widget _buildBody() {
+  if (_showVegetableList) {
+    return _buildVegetableList();
+  }
+  
+  return _buildScannerView();
+}
+
+Widget _buildScannerView() {
+  return Stack(
+    children: [
+      _buildCameraPreview(),
+      if (_showVegetableAnimation) _buildVegetableAnimation(),
+      if (_scannedVegetable.isNotEmpty && !_showVegetableAnimation)
+        _buildVegetableInfo(),
+      _buildCaptureButton(),
+    ],
+  );
+}
+
+// ==================== CAMERA METHODS ====================
+
+Widget _buildCameraPreview() {
+  // Your camera preview implementation
+  // Return the camera widget here
+  return Container(); // Placeholder
+}
+
+// ==================== ANIMATION METHODS ====================
+
+Widget _buildVegetableAnimation() {
+  // Your vegetable scanning animation implementation
+  return Container(); // Placeholder
+}
+
+// ==================== VEGETABLE INFO METHODS ====================
+
+Widget _buildVegetableInfo() {
+  // Your vegetable information display implementation
+  return Container(); // Placeholder
+}
+
+// ==================== BUTTON METHODS ====================
+
+Widget _buildCaptureButton() {
+  // Your capture button implementation
+  return Container(); // Placeholder
+}
+
+// ==================== VEGETABLE LIST METHODS ====================
+
+Widget _buildVegetableList() {
+  // Your vegetable list implementation
+  return Container(); // Placeholder
+}
+
+// ==================== HELPER METHODS ====================
+
+void _showVegetableListScreen() {
+  // Implementation for showing vegetable list
+  setState(() {
+    _showVegetableList = true;
+  });
+}
+
+// ==================== ENUMS ====================
+
+enum CornerPosition {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
+
+// Extension for CornerPosition (optional but useful)
+extension CornerPositionExtension on CornerPosition {
+  Alignment get alignment {
+    switch (this) {
+      case CornerPosition.topLeft:
+        return Alignment.topLeft;
+      case CornerPosition.topRight:
+        return Alignment.topRight;
+      case CornerPosition.bottomLeft:
+        return Alignment.bottomLeft;
+      case CornerPosition.bottomRight:
+        return Alignment.bottomRight;
+    }
+  }
+  
+  String get label {
+    switch (this) {
+      case CornerPosition.topLeft:
+        return 'Top Left';
+      case CornerPosition.topRight:
+        return 'Top Right';
+      case CornerPosition.bottomLeft:
+        return 'Bottom Left';
+      case CornerPosition.bottomRight:
+        return 'Bottom Right';
+    }
+  }
+}
