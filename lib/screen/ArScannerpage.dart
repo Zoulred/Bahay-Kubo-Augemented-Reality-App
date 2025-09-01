@@ -2051,61 +2051,262 @@ class _ARActivityPageState extends State<ARActivityPage>
     );
   }
 
-  Widget _buildRecipesSection(List<String> recipes) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.purple[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.purple[100]!),
+ Widget _buildRecipesSection(List<String> recipes) {
+  if (recipes.isEmpty) return const SizedBox.shrink();
+  
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    padding: const EdgeInsets.all(16),
+    decoration: _buildSectionDecoration(),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(),
+        const SizedBox(height: 12),
+        _buildRecipeList(recipes),
+      ],
+    ),
+  );
+}
+
+// Helper method to build section decoration
+BoxDecoration _buildSectionDecoration() {
+  return BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Colors.purple[50]!,
+        Colors.purple[50]!.withOpacity(0.5),
+      ],
+    ),
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(
+      color: Colors.purple[100]!,
+      width: 1.5,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.purple.withOpacity(0.05),
+        blurRadius: 8,
+        offset: const Offset(0, 2),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
+    ],
+  );
+}
+
+// Helper method to build section header
+Widget _buildSectionHeader() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+    decoration: BoxDecoration(
+      color: Colors.purple.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.restaurant_menu, color: Colors.purple, size: 22),
+        SizedBox(width: 8),
+        Text(
+          'Popular Recipes',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.purple,
+            fontSize: 18,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper method to build recipe list
+Widget _buildRecipeList(List<String> recipes) {
+  return ListView.separated(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: recipes.length,
+    separatorBuilder: (context, index) => const Divider(
+      height: 4,
+      thickness: 0.5,
+      color: Colors.purple,
+      indent: 28,
+    ),
+    itemBuilder: (context, index) {
+      final recipe = recipes[index];
+      return _buildRecipeItem(recipe, index);
+    },
+  );
+}
+
+// Helper method to build individual recipe item
+Widget _buildRecipeItem(String recipe, int index) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildRecipeIcon(index),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildRecipeText(recipe),
+        ),
+        _buildRecipeActionButton(),
+      ],
+    ),
+  );
+}
+
+// Helper method to build recipe icon with index
+Widget _buildRecipeIcon(int index) {
+  return Container(
+    width: 28,
+    height: 28,
+    decoration: BoxDecoration(
+      color: Colors.purple.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Center(
+      child: Text(
+        '${index + 1}',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.purple[700],
+        ),
+      ),
+    ),
+  );
+}
+
+// Helper method to build recipe text
+Widget _buildRecipeText(String recipe) {
+  return Text(
+    recipe,
+    style: const TextStyle(
+      fontSize: 15,
+      height: 1.4,
+      color: Colors.black87,
+    ),
+    maxLines: 2,
+    overflow: TextOverflow.ellipsis,
+  );
+}
+
+// Helper method to build action button for each recipe
+Widget _buildRecipeActionButton() {
+  return IconButton(
+    icon: Icon(
+      Icons.chevron_right,
+      size: 20,
+      color: Colors.purple[300],
+    ),
+    onPressed: () {
+      // Add navigation or action logic here
+      // _onRecipeTap(recipe);
+    },
+    padding: EdgeInsets.zero,
+    constraints: const BoxConstraints(),
+    splashRadius: 20,
+  );
+}
+
+// Optional: Add loading skeleton for better UX
+Widget _buildRecipesLoadingSkeleton() {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: _buildSectionDecoration(),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(),
+        const SizedBox(height: 12),
+        ...List.generate(3, (index) => _buildRecipeSkeletonItem(index)),
+      ],
+    ),
+  );
+}
+
+Widget _buildRecipeSkeletonItem(int index) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.restaurant, color: Colors.purple, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Popular Recipes',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.purple,
-                  fontSize: 18,
+              Container(
+                height: 16,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                height: 12,
+                width: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: recipes
-                .map((recipe) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.arrow_right,
-                              color: Colors.purple, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              recipe,
-                              style: const TextStyle(fontSize: 16),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ))
-                .toList(),
+        ),
+      ],
+    ),
+  );
+}
+
+// Optional: Add empty state widget
+Widget _buildEmptyRecipesState() {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: _buildSectionDecoration(),
+    child: Column(
+      children: [
+        Icon(
+          Icons.restaurant_menu,
+          size: 48,
+          color: Colors.purple[200],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'No recipes available',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.purple[400],
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Check back later for delicious suggestions!',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[500],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   Color _getSectionColor(String title) {
     switch (title) {
