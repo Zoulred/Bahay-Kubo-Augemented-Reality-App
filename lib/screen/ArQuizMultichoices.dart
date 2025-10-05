@@ -1826,197 +1826,105 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
       ),
     );
   }
-// ==================== LEVEL INDICATOR METHODS ====================
 
-Widget _buildLevelIndicator(int level, String title) {
-  final bool isCurrent = level == currentLevel;
-  final bool isCompleted = levelScores[level]! > 0;
-  final bool isUnlocked = level == 1 || levelScores[level - 1]! > 0;
-  final Color levelColor = _getLevelColor(level);
+  Widget _buildLevelIndicator(int level, String title) {
+    bool isCurrent = level == currentLevel;
+    bool isCompleted = levelScores[level]! > 0;
+    bool isUnlocked = level == 1 || levelScores[level - 1]! > 0;
 
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 5),
-    child: Column(
-      children: [
-        _buildLevelCircle(level, isCurrent, isCompleted, isUnlocked, levelColor),
-        const SizedBox(height: 4),
-        _buildLevelTitle(title, isCurrent, levelColor),
-      ],
-    ),
-  );
-}
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 5),
+      child: Column(
+        children: [
+          Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(
+              color: isCurrent
+                  ? _getLevelColor(level)
+                  : isCompleted
+                      ? _getLevelColor(level).withOpacity(0.7)
+                      : isUnlocked
+                          ? Colors.grey[300]
+                          : Colors.grey[200],
+              shape: BoxShape.circle,
+              border: isCurrent
+                  ? Border.all(color: _getLevelColor(level), width: 3)
+                  : null,
+            ),
+            child: Center(
+              child: isCompleted
+                  ? Icon(Icons.check, color: Colors.white, size: 18)
+                  : Text(
+                      '$level',
+                      style: TextStyle(
+                        color: isUnlocked ? Colors.black : Colors.grey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 9,
+              color: isCurrent ? _getLevelColor(level) : Colors.grey,
+              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 
-// Helper method to build level circle
-Widget _buildLevelCircle(
-  int level,
-  bool isCurrent,
-  bool isCompleted,
-  bool isUnlocked,
-  Color levelColor,
-) {
-  return Container(
-    width: 35,
-    height: 35,
-    decoration: _buildCircleDecoration(isCurrent, isCompleted, isUnlocked, levelColor),
-    child: Center(
-      child: isCompleted
-          ? _buildCheckIcon()
-          : _buildLevelNumber(level, isUnlocked),
-    ),
-  );
-}
+  Widget _buildAnimatedLevelScoreRow(
+      int level, int totalQuestions, String title) {
+    return AnimatedBuilder(
+      animation: _bounceController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(_bounceAnimation.value * 0.2, 0),
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: _getLevelColor(level).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _getLevelColor(level).withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _getLevelColor(level),
+                  ),
+                ),
+                Text(
+                  '${levelScores[level]}/$totalQuestions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _getLevelColor(level),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-// Helper method to build circle decoration
-BoxDecoration _buildCircleDecoration(
-  bool isCurrent,
-  bool isCompleted,
-  bool isUnlocked,
-  Color levelColor,
-) {
-  return BoxDecoration(
-    color: _getCircleColor(isCurrent, isCompleted, isUnlocked, levelColor),
-    shape: BoxShape.circle,
-    border: isCurrent ? _buildCurrentLevelBorder(levelColor) : null,
-  );
-}
-
-// Helper method to get circle color
-Color _getCircleColor(
-  bool isCurrent,
-  bool isCompleted,
-  bool isUnlocked,
-  Color levelColor,
-) {
-  if (isCurrent) return levelColor;
-  if (isCompleted) return levelColor.withOpacity(0.7);
-  if (isUnlocked) return Colors.grey[300]!;
-  return Colors.grey[200]!;
-}
-
-// Helper method to build current level border
-BoxBorder _buildCurrentLevelBorder(Color levelColor) {
-  return Border.all(color: levelColor, width: 3);
-}
-
-// Helper method to build check icon
-Widget _buildCheckIcon() {
-  return const Icon(
-    Icons.check,
-    color: Colors.white,
-    size: 18,
-  );
-}
-
-// Helper method to build level number
-Widget _buildLevelNumber(int level, bool isUnlocked) {
-  return Text(
-    '$level',
-    style: TextStyle(
-      color: isUnlocked ? Colors.black : Colors.grey,
-      fontWeight: FontWeight.bold,
-      fontSize: 14,
-    ),
-  );
-}
-
-// Helper method to build level title
-Widget _buildLevelTitle(String title, bool isCurrent, Color levelColor) {
-  return Text(
-    title,
-    style: TextStyle(
-      fontSize: 9,
-      color: isCurrent ? levelColor : Colors.grey,
-      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-    ),
-    textAlign: TextAlign.center,
-  );
-}
-
-// ==================== ANIMATED LEVEL SCORE ROW METHODS ====================
-
-Widget _buildAnimatedLevelScoreRow(
-  int level,
-  int totalQuestions,
-  String title,
-) {
-  return AnimatedBuilder(
-    animation: _bounceController,
-    builder: (context, child) {
-      return Transform.translate(
-        offset: Offset(_bounceAnimation.value * 0.2, 0),
-        child: _buildScoreRowContainer(level, totalQuestions, title),
-      );
-    },
-  );
-}
-
-// Helper method to build score row container
-Widget _buildScoreRowContainer(
-  int level,
-  int totalQuestions,
-  String title,
-) {
-  final Color levelColor = _getLevelColor(level);
-  
-  return Container(
-    margin: const EdgeInsets.symmetric(vertical: 6),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-    decoration: _buildScoreRowDecoration(levelColor),
-    child: _buildScoreRowContent(level, totalQuestions, title, levelColor),
-  );
-}
-
-// Helper method to build score row decoration
-BoxDecoration _buildScoreRowDecoration(Color levelColor) {
-  return BoxDecoration(
-    color: levelColor.withOpacity(0.1),
-    borderRadius: BorderRadius.circular(10),
-    border: Border.all(
-      color: levelColor.withOpacity(0.3),
-      width: 1,
-    ),
-  );
-}
-
-// Helper method to build score row content
-Widget _buildScoreRowContent(
-  int level,
-  int totalQuestions,
-  String title,
-  Color levelColor,
-) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      _buildScoreTitle(title, levelColor),
-      _buildScoreValue(level, totalQuestions, levelColor),
-    ],
-  );
-}
-
-// Helper method to build score title
-Widget _buildScoreTitle(String title, Color levelColor) {
-  return Text(
-    title,
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-      color: levelColor,
-    ),
-  );
-}
-
-// Helper method to build score value
-Widget _buildScoreValue(int level, int totalQuestions, Color levelColor) {
-  return Text(
-    '${levelScores[level]}/$totalQuestions',
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.bold,
-      color: levelColor,
-    ),
-  );
-}
   Color _getLevelColor(int level) {
     switch (level) {
       case 1:
