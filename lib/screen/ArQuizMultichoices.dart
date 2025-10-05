@@ -20,10 +20,8 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   int totalScore = 0;
   Map<int, int> levelScores = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0};
 
-  // Audio player for sound effects
   final AudioPlayer _audioPlayer = AudioPlayer();
 
-  // Animation controllers
   late AnimationController _confettiController;
   late AnimationController _scaleController;
   late AnimationController _bounceController;
@@ -31,10 +29,8 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   late Animation<double> _bounceAnimation;
   late Animation<Color?> _colorAnimation;
 
-  // Random number generator
   final Random _random = Random();
 
-  // Original questions with correct numbering
   final List<Map<String, dynamic>> _originalLevel1Questions = [
     {
       'question': 'What is the Bahay Kubo made primarily of?',
@@ -382,7 +378,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
     },
   ];
 
-  // Additional levels 4-7
   final List<Map<String, dynamic>> _originalLevel4Questions = [
     {
       'question':
@@ -890,7 +885,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
     },
   ];
 
-  // Shuffled questions that will be used in the quiz
   late List<Map<String, dynamic>> level1Questions;
   late List<Map<String, dynamic>> level2Questions;
   late List<Map<String, dynamic>> level3Questions;
@@ -903,21 +897,20 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   void initState() {
     super.initState();
 
-    // Initialize animation controllers
     _confettiController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
-    )..repeat(reverse: true); // Continuous confetti animation
+    )..repeat(reverse: true);
 
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
-    )..repeat(reverse: true); // Continuous scale animation
+    )..repeat(reverse: true);
 
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
-    )..repeat(reverse: true); // Continuous bounce animation
+    )..repeat(reverse: true);
 
     _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
       CurvedAnimation(
@@ -956,7 +949,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   }
 
   void _shuffleAllQuestions() {
-    // Shuffle all levels questions and options
     level1Questions = _shuffleQuestions(_originalLevel1Questions);
     level2Questions = _shuffleQuestions(_originalLevel2Questions);
     level3Questions = _shuffleQuestions(_originalLevel3Questions);
@@ -966,24 +958,20 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
     level7Questions = _shuffleQuestions(_originalLevel7Questions);
   }
 
-  // Play sound effect
   Future<void> _playSuccessSound() async {
     try {
-      await _audioPlayer.stop(); // Stop any currently playing sound
+      await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('audio/mahusay.mp3'));
     } catch (e) {
       print('Error playing sound: $e');
     }
   }
 
-  // Start all animations
   void _startAnimations() {
-    // Stop all animations first
     _confettiController.stop();
     _scaleController.stop();
     _bounceController.stop();
 
-    // Reset and restart with continuous animations
     _confettiController.reset();
     _scaleController.reset();
     _bounceController.reset();
@@ -992,19 +980,15 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
     _scaleController.repeat(reverse: true);
     _bounceController.repeat(reverse: true);
 
-    // Play success sound
     _playSuccessSound();
   }
 
   List<Map<String, dynamic>> _shuffleQuestions(
       List<Map<String, dynamic>> questions) {
-    // Create a copy of the questions list to avoid modifying the original
     List<Map<String, dynamic>> shuffledQuestions = List.from(questions);
 
-    // Shuffle the order of questions
     shuffledQuestions.shuffle(_random);
 
-    // Shuffle options for each question and update correct answer
     for (int i = 0; i < shuffledQuestions.length; i++) {
       shuffledQuestions[i] = _shuffleQuestionOptions(shuffledQuestions[i]);
     }
@@ -1015,22 +999,17 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   Map<String, dynamic> _shuffleQuestionOptions(Map<String, dynamic> question) {
     List<String> options = List.from(question['options']);
 
-    // Create a list of option indices
     List<int> indices = List.generate(options.length, (index) => index);
 
-    // Shuffle the indices
     indices.shuffle(_random);
 
-    // Create new shuffled options
     List<String> shuffledOptions = [];
     for (int index in indices) {
       shuffledOptions.add(options[index]);
     }
 
-    // Find the new position of the correct answer
     String newCorrectAnswer = '';
     for (int i = 0; i < indices.length; i++) {
-      // Convert the original correct answer to index (a=0, b=1, c=2, d=3)
       int originalCorrectIndex =
           question['correctAnswer'].codeUnitAt(0) - 'a'.codeUnitAt(0);
 
@@ -1049,9 +1028,7 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
     };
   }
 
-  // Get the sequential question number for display (Q1, Q2, Q3...)
   String _getQuestionNumber(int currentIndex) {
-    // Calculate the base number for the current level
     int baseNumber = (currentLevel - 1) * 10;
     return 'Q${baseNumber + currentIndex + 1}';
   }
@@ -1080,7 +1057,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   int get totalQuestions => currentLevelQuestions.length;
 
   void _resetQuizForLevel(int level) {
-    // Stop all animations when resetting
     _confettiController.stop();
     _scaleController.stop();
     _bounceController.stop();
@@ -1092,7 +1068,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
       userAnswers.clear();
       levelCompleted = false;
 
-      // Update color animation for new level
       _colorAnimation = ColorTween(
         begin: _getLevelColor(level).withOpacity(0.7),
         end: _getLevelColor(level).withOpacity(1),
@@ -1103,7 +1078,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
         ),
       );
 
-      // Reshuffle questions when starting a new level
       _shuffleAllQuestions();
     });
   }
@@ -1112,11 +1086,10 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
     if (currentLevel < 7) {
       _resetQuizForLevel(currentLevel + 1);
     } else {
-      // All levels completed
       setState(() {
         allLevelsCompleted = true;
       });
-      _startAnimations(); // Start animations for final results
+      _startAnimations();
     }
   }
 
@@ -1176,7 +1149,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Level indicator
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
@@ -1198,7 +1170,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 ),
               ),
               const SizedBox(height: 15),
-              // Progress indicator
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: LinearProgressIndicator(
@@ -1210,7 +1181,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 ),
               ),
               const SizedBox(height: 5),
-              // Question counter
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Row(
@@ -1236,7 +1206,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 ),
               ),
               const SizedBox(height: 15),
-              // Question image
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Container(
@@ -1263,7 +1232,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 ),
               ),
               const SizedBox(height: 15),
-              // Question text - Now with sequential numbering
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Text(
@@ -1277,7 +1245,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 ),
               ),
               const SizedBox(height: 15),
-              // Options
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Column(
@@ -1287,7 +1254,7 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                     (index) => Column(
                       children: [
                         _buildOption(
-                          String.fromCharCode(97 + index), // a, b, c, d
+                          String.fromCharCode(97 + index),
                           currentLevelQuestions[currentQuestionIndex]['options']
                               [index],
                         ),
@@ -1297,7 +1264,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                   ),
                 ),
               ),
-              // Next/Submit button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: SizedBox(
@@ -1305,19 +1271,15 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                   child: ElevatedButton(
                     onPressed: selectedOption != null
                         ? () {
-                            // Save the answer
                             userAnswers[currentQuestionIndex] = selectedOption;
 
-                            // Check if it's the last question
                             if (currentQuestionIndex < totalQuestions - 1) {
-                              // Move to next question
                               setState(() {
                                 currentQuestionIndex++;
                                 selectedOption =
                                     userAnswers[currentQuestionIndex];
                               });
                             } else {
-                              // Show level results
                               _showLevelResults();
                             }
                           }
@@ -1369,7 +1331,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
       ),
       body: Stack(
         children: [
-          // Continuous confetti animation in background
           AnimatedBuilder(
             animation: _confettiController,
             builder: (context, child) {
@@ -1382,7 +1343,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
               );
             },
           ),
-          // Pulsating background effect
           AnimatedBuilder(
             animation: _scaleController,
             builder: (context, child) {
@@ -1411,7 +1371,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Animated trophy with continuous scale and bounce effects
                     AnimatedBuilder(
                       animation: _bounceController,
                       builder: (context, child) {
@@ -1429,7 +1388,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                       },
                     ),
                     const SizedBox(height: 30),
-                    // Bouncing title text
                     AnimatedBuilder(
                       animation: _bounceController,
                       builder: (context, child) {
@@ -1456,7 +1414,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                       },
                     ),
                     const SizedBox(height: 30),
-                    // Animated score display
                     AnimatedBuilder(
                       animation: _scaleController,
                       builder: (context, child) {
@@ -1486,7 +1443,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                       },
                     ),
                     const SizedBox(height: 40),
-                    // Animated buttons
                     Column(
                       children: [
                         if (currentLevel < 7) ...[
@@ -1625,7 +1581,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
       ),
       body: Stack(
         children: [
-          // Continuous confetti animation in background
           AnimatedBuilder(
             animation: _confettiController,
             builder: (context, child) {
@@ -1638,7 +1593,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
               );
             },
           ),
-          // Pulsating background effect
           AnimatedBuilder(
             animation: _scaleController,
             builder: (context, child) {
@@ -1667,7 +1621,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Animated gold trophy with continuous effects
                     AnimatedBuilder(
                       animation: _bounceController,
                       builder: (context, child) {
@@ -1685,7 +1638,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                       },
                     ),
                     const SizedBox(height: 30),
-                    // Bouncing congratulations text
                     AnimatedBuilder(
                       animation: _bounceController,
                       builder: (context, child) {
@@ -1720,7 +1672,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 30),
-                    // Animated score display
                     AnimatedBuilder(
                       animation: _scaleController,
                       builder: (context, child) {
@@ -1947,7 +1898,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   }
 
   void _showLevelResults() {
-    // Calculate score for current level
     int score = 0;
     for (int i = 0; i < totalQuestions; i++) {
       if (userAnswers[i] == currentLevelQuestions[i]['correctAnswer']) {
@@ -1955,14 +1905,11 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
       }
     }
 
-    // Update level score
     levelScores[currentLevel] = score;
     totalScore += score;
 
-    // Start continuous animations
     _startAnimations();
 
-    // Set level completed
     setState(() {
       levelCompleted = true;
     });
@@ -2043,7 +1990,6 @@ class _MultipleChoiceQuizPageState extends State<MultipleChoiceQuizPage>
   }
 }
 
-// Custom continuous confetti painter for animation
 class ContinuousConfettiPainter extends CustomPainter {
   final double animationValue;
   final Color color;
@@ -2054,7 +2000,6 @@ class ContinuousConfettiPainter extends CustomPainter {
     required this.animationValue,
     required this.color,
   }) {
-    // Initialize particles if empty
     if (_particles.isEmpty) {
       for (int i = 0; i < 80; i++) {
         _particles.add(ConfettiParticle.random(_random));
@@ -2066,22 +2011,16 @@ class ContinuousConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
-    // Update and draw particles
     for (final particle in _particles) {
-      // Update particle position based on animation
       particle.update(animationValue, size);
 
-      // Set color with opacity based on particle life
       paint.color = color.withOpacity(particle.opacity);
 
-      // Save canvas state
       canvas.save();
 
-      // Translate to particle position and rotate
       canvas.translate(particle.x * size.width, particle.y * size.height);
       canvas.rotate(particle.rotation);
 
-      // Draw confetti piece
       canvas.drawRect(
         Rect.fromCenter(
           center: Offset.zero,
@@ -2091,7 +2030,6 @@ class ContinuousConfettiPainter extends CustomPainter {
         paint,
       );
 
-      // Restore canvas state
       canvas.restore();
     }
   }
@@ -2102,7 +2040,6 @@ class ContinuousConfettiPainter extends CustomPainter {
   }
 }
 
-// Confetti particle class for continuous animation
 class ConfettiParticle {
   double x;
   double y;
@@ -2129,7 +2066,7 @@ class ConfettiParticle {
   factory ConfettiParticle.random(Random random) {
     return ConfettiParticle(
       x: random.nextDouble(),
-      y: random.nextDouble() * 1.5 - 0.5, // Start above the screen
+      y: random.nextDouble() * 1.5 - 0.5,
       speed: random.nextDouble() * 0.5 + 0.2,
       rotation: random.nextDouble() * 2 * pi,
       rotationSpeed: random.nextDouble() * 0.1 - 0.05,
@@ -2141,20 +2078,15 @@ class ConfettiParticle {
   }
 
   void update(double animationValue, Size size) {
-    // Move particle down
     y += speed * 0.01;
 
-    // Update rotation
     rotation += rotationSpeed;
 
-    // Update life cycle
     life += 0.01;
     if (life > 1.0) life = 0.0;
 
-    // Calculate opacity based on life
     opacity = 0.7 * (1.0 - life);
 
-    // Reset particle when it goes off screen
     if (y > 1.5) {
       y = -0.5;
       x = _random.nextDouble();
