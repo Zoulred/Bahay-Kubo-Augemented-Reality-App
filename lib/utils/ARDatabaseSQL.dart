@@ -333,98 +333,170 @@ class DatabaseHelper {
       });
     }
   }
+// ==================== VEGETABLE SCAN METHODS ====================
 
-  Future<int> getVegetableScanCount(String vegetableKey) async {
-    final db = await database;
-    List<Map<String, dynamic>> results = await db.query(
-      'vegetable_scans',
-      where: 'vegetable_key = ?',
-      whereArgs: [vegetableKey],
-    );
+// ==================== GET SCAN COUNTS ====================
 
-    if (results.isNotEmpty) {
-      return results.first['scan_count'] as int;
-    }
-    return 0;
+Future<int> getVegetableScanCount(String vegetableKey) async {
+  final db = await database;
+  final results = await _queryVegetableScansByKey(db, vegetableKey);
+  
+  return _extractScanCount(results);
+}
+
+Future<int> getVegetableScanCountByName(String vegetableName) async {
+  final db = await database;
+  final vegetableKey = _normalizeVegetableKey(vegetableName);
+  final results = await _queryVegetableScansByKey(db, vegetableKey);
+  
+  return _extractScanCount(results);
+}
+
+Future<Map<String, int>> getAllVegetableScanCounts() async {
+  final db = await database;
+  final results = await _queryAllVegetableScans(db);
+  
+  return _buildScanCountsMap(results);
+}
+
+// ==================== GET ALL SCANS ====================
+
+Future<List<Map<String, dynamic>>> getAllVegetableScans() async {
+  final db = await database;
+  return await _queryVegetableScansOrdered(db);
+}
+
+// ==================== RESET SCANS ====================
+
+Future<void> resetVegetableScans() async {
+  final db = await database;
+  await _deleteAllVegetableScans(db);
+}
+
+Future<void> resetVegetableScan(String vegetableKey) async {
+  final db = await database;
+  await _deleteVegetableScanByKey(db, vegetableKey);
+}
+
+// ==================== PRIVATE HELPER METHODS ====================
+
+// Query helpers
+Future<List<Map<String, dynamic>>> _queryVegetableScansByKey(
+  Database db,
+  String vegetableKey,
+) async {
+  return await db.query(
+    'vegetable_scans',
+    where: 'vegetable_key = ?',
+    whereArgs: [vegetableKey],
+  );
+}
+
+Future<List<Map<String, dynamic>>> _queryAllVegetableScans(Database db) async {
+  return await db.query('vegetable_scans');
+}
+
+Future<List<Map<String, dynamic>>> _queryVegetableScansOrdered(Database db) async {
+  return await db.query(
+    'vegetable_scans',
+    orderBy: 'scan_count DESC',
+  );
+}
+
+// Delete helpers
+Future<void> _deleteAllVegetableScans(Database db) async {
+  await db.delete('vegetable_scans');
+}
+
+Future<void> _deleteVegetableScanByKey(Database db, String vegetableKey) async {
+  await db.delete(
+    'vegetable_scans',
+    where: 'vegetable_key = ?',
+    whereArgs: [vegetableKey],
+  );
+}
+
+// Data extraction helpers
+int _extractScanCount(List<Map<String, dynamic>> results) {
+  if (results.isNotEmpty) {
+    return results.first['scan_count'] as int;
   }
+  return 0;
+}
 
-  Future<int> getVegetableScanCountByName(String vegetableName) async {
-    final db = await database;
-    String vegetableKey = vegetableName.toLowerCase().replaceAll(' ', '_');
-
-    List<Map<String, dynamic>> results = await db.query(
-      'vegetable_scans',
-      where: 'vegetable_key = ?',
-      whereArgs: [vegetableKey],
-    );
-
-    if (results.isNotEmpty) {
-      return results.first['scan_count'] as int;
-    }
-    return 0;
+Map<String, int> _buildScanCountsMap(List<Map<String, dynamic>> results) {
+  final Map<String, int> scanCounts = {};
+  for (final row in results) {
+    scanCounts[row['vegetable_key'] as String] = row['scan_count'] as int;
   }
+  return scanCounts;
+}
 
-  Future<List<Map<String, dynamic>>> getAllVegetableScans() async {
-    final db = await database;
-    return await db.query('vegetable_scans', orderBy: 'scan_count DESC');
-  }
+// String helpers
+String _normalizeVegetableKey(String vegetableName) {
+  return vegetableName.toLowerCase().replaceAll(' ', '_');
+}
 
-  Future<Map<String, int>> getAllVegetableScanCounts() async {
-    final db = await database;
-    List<Map<String, dynamic>> results = await db.query('vegetable_scans');
+// ==================== USER SCAN TRACKING METHODS ====================
 
-    Map<String, int> scanCounts = {};
-    for (var row in results) {
-      scanCounts[row['vegetable_key'] as String] = row['scan_count'] as int;
-    }
-    return scanCounts;
-  }
+// ==================== GET USER SCANS ====================
 
-  Future<void> resetVegetableScans() async {
-    final db = await database;
-    await db.delete('vegetable_scans');
-  }
+Future<List<Map<String, dynamic>>> getUserScanHistory(int userId) async {
+  final db = await database;
+  return await _queryUserScanHistory(db, userId);
+}
 
-  Future<void> resetVegetableScan(String vegetableKey) async {
-    final db = await database;
-    await db.delete(
-      'vegetable_scans',
-      where: 'vegetable_key = ?',
-      whereArgs: [vegetableKey],
-    );
-  }
+Future<int> getUserTotalScanCount(int userId) async {
+  final db = await database;
+  final result = await _queryUserTotalScanCount(db, userId);
+  return _extractCount(result);
+}
 
-  // NEW METHODS FOR USER SCAN TRACKING
+// ==================== GET ALL USER SCANS ====================
 
-  Future<List<Map<String, dynamic>>> getUserScanHistory(int userId) async {
-    final db = await database;
-    return await db.query(
-      'user_vegetable_scans',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'scanned_at DESC',
-    );
-  }
+Future<List<Map<String, dynamic>>> getAllUserVegetableScans() async {
+  final db = await database;
+  return await _queryAllUserVegetableScans(db);
+}
 
-  Future<int> getUserTotalScanCount(int userId) async {
-    final db = await database;
-    final result = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM user_vegetable_scans WHERE user_id = ?',
-      [userId],
-    );
-    return result.first['count'] as int? ?? 0;
-  }
+// ==================== PRIVATE HELPER METHODS ====================
 
-  Future<List<Map<String, dynamic>>> getAllUserVegetableScans() async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT uvs.*, u.username, u.email, u.role 
-      FROM user_vegetable_scans uvs
-      JOIN users u ON uvs.user_id = u.id
-      ORDER BY uvs.scanned_at DESC
-    ''');
-  }
+// Query helpers
+Future<List<Map<String, dynamic>>> _queryUserScanHistory(
+  Database db,
+  int userId,
+) async {
+  return await db.query(
+    'user_vegetable_scans',
+    where: 'user_id = ?',
+    whereArgs: [userId],
+    orderBy: 'scanned_at DESC',
+  );
+}
 
+Future<List<Map<String, dynamic>>> _queryUserTotalScanCount(
+  Database db,
+  int userId,
+) async {
+  return await db.rawQuery(
+    'SELECT COUNT(*) as count FROM user_vegetable_scans WHERE user_id = ?',
+    [userId],
+  );
+}
+
+Future<List<Map<String, dynamic>>> _queryAllUserVegetableScans(Database db) async {
+  return await db.rawQuery('''
+    SELECT uvs.*, u.username, u.email, u.role 
+    FROM user_vegetable_scans uvs
+    JOIN users u ON uvs.user_id = u.id
+    ORDER BY uvs.scanned_at DESC
+  ''');
+}
+
+// Data extraction helpers
+int _extractCount(List<Map<String, dynamic>> result) {
+  return result.first['count'] as int? ?? 0;
+}
   Future<Map<String, dynamic>> getUserScanStats(int userId) async {
     final db = await database;
 
