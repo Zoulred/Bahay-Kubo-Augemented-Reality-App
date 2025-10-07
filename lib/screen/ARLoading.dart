@@ -31,8 +31,7 @@ class _LoadingScreenState extends State<LoadingScreen>
     super.initState();
 
     _rotationController = AnimationController(
-      duration:
-          const Duration(seconds: 6),
+      duration: const Duration(seconds: 6),
       vsync: this,
     );
 
@@ -57,9 +56,7 @@ class _LoadingScreenState extends State<LoadingScreen>
     );
 
     _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _rotationController,
-          curve: Curves.linear),
+      CurvedAnimation(parent: _rotationController, curve: Curves.linear),
     );
 
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
@@ -455,38 +452,71 @@ class _LoadingScreenState extends State<LoadingScreen>
       ),
     );
   }
+// ==================== ANIMATED VEGETABLE IMAGE METHODS ====================
 
   Widget _buildAnimatedVegetableImage(
-      Color color, int delay, String imagePath) {
+    Color color,
+    int delay,
+    String imagePath,
+  ) {
     return AnimatedBuilder(
       animation: _fadeAnimation,
       builder: (context, child) {
-        double opacity = 0.0;
-        if (_fadeAnimation.value * 1000 > delay) {
-          opacity = (_fadeAnimation.value * 1000 - delay) / 500;
-          if (opacity > 1.0) opacity = 1.0;
-        }
-
-        return Opacity(
-          opacity: opacity,
-          child: Transform.scale(
-            scale: opacity,
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              width: 22,
-              height: 22,
-              errorBuilder: (context, error, stackTrace) {
-                return Icon(
-                  Icons.error,
-                  color: Colors.white,
-                  size: 14,
-                );
-              },
-            ),
-          ),
-        );
+        final double opacity = _calculateOpacity(delay);
+        return _buildAnimatedImage(imagePath, opacity);
       },
+    );
+  }
+
+// Helper method to calculate opacity based on delay
+  double _calculateOpacity(int delay) {
+    double opacity = 0.0;
+    final currentAnimationValue = _fadeAnimation.value * 1000;
+
+    if (currentAnimationValue > delay) {
+      opacity = (currentAnimationValue - delay) / 500;
+      opacity = _clampOpacity(opacity);
+    }
+
+    return opacity;
+  }
+
+// Helper method to clamp opacity between 0 and 1
+  double _clampOpacity(double opacity) {
+    if (opacity > 1.0) return 1.0;
+    if (opacity < 0.0) return 0.0;
+    return opacity;
+  }
+
+// Helper method to build animated image widget
+  Widget _buildAnimatedImage(String imagePath, double opacity) {
+    return Opacity(
+      opacity: opacity,
+      child: Transform.scale(
+        scale: opacity,
+        child: _buildVegetableImage(imagePath),
+      ),
+    );
+  }
+
+// Helper method to build vegetable image with error handling
+  Widget _buildVegetableImage(String imagePath) {
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      width: 22,
+      height: 22,
+      errorBuilder: _buildImageErrorWidget,
+    );
+  }
+
+// Helper method to build error widget for image loading failures
+  Widget _buildImageErrorWidget(
+      BuildContext context, Object error, StackTrace? stackTrace) {
+    return const Icon(
+      Icons.error,
+      color: Colors.white,
+      size: 14,
     );
   }
 
