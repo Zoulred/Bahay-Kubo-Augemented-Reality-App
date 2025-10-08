@@ -2362,90 +2362,243 @@ class _ARAdventure3DPageState extends State<ARAdventure3DPage>
     _audioService.dispose();
     super.dispose();
   }
+// ==================== MAIN WIDGET ====================
 
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: _buildAppBar(),
+    body: _buildBody(),
+  );
+}
+
+// ==================== APP BAR COMPONENTS ====================
+
+class VeggieHuntAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final bool isARView;
+  final int collectedCount;
+  final VoidCallback onCollectionPressed;
+  final VoidCallback onToggleView;
+  final Widget avatar;
+  
+  const VeggieHuntAppBar({
+    super.key,
+    required this.isARView,
+    required this.collectedCount,
+    required this.onCollectionPressed,
+    required this.onToggleView,
+    required this.avatar,
+  });
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isARView ? 'AR Veggie Hunt' : 'Veggie Hunt Map',
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.green[700],
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: Badge(
-              label: Text(
-                _collectedVegetables.length.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              backgroundColor: Colors.red,
-              child: Image.asset(
-                'assets/images/collect.png',
-                width: 26,
-                height: 26,
-              ),
-            ),
-            onPressed: _showCollection,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: _buildAppBarAvatar(),
-          ),
-          IconButton(
-            icon: Image.asset(
-              _isARView ? "assets/images/armap.png" : "assets/images/cam1.png",
-              width: 28,
-              height: 28,
-            ),
-            onPressed: _toggleARView,
-          ),
-        ],
+    return AppBar(
+      title: Text(
+        isARView ? AppBarConstants.arTitle : AppBarConstants.mapTitle,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
-      body: _isLoading
-          ? _buildLoadingScreen()
-          : _locationEnabled
-              ? (_isARView ? _buildARView() : _buildMapView())
-              : _buildPermissionScreen(),
+      backgroundColor: Colors.green[700],
+      iconTheme: const IconThemeData(color: Colors.white),
+      actions: [
+        CollectionBadgeButton(
+          count: collectedCount,
+          onPressed: onCollectionPressed,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: avatar,
+        ),
+        ViewToggleButton(
+          isARView: isARView,
+          onPressed: onToggleView,
+        ),
+      ],
     );
   }
+  
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
 
-  Widget _buildLoadingScreen() {
+class CollectionBadgeButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onPressed;
+  
+  const CollectionBadgeButton({
+    super.key,
+    required this.count,
+    required this.onPressed,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Badge(
+        label: Text(
+          count.toString(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: AppBarConstants.badgeFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.red,
+        child: Image.asset(
+          ImagePaths.collectionIcon,
+          width: AppBarConstants.collectionIconSize,
+          height: AppBarConstants.collectionIconSize,
+        ),
+      ),
+      onPressed: onPressed,
+    );
+  }
+}
+
+class ViewToggleButton extends StatelessWidget {
+  final bool isARView;
+  final VoidCallback onPressed;
+  
+  const ViewToggleButton({
+    super.key,
+    required this.isARView,
+    required this.onPressed,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Image.asset(
+        isARView ? ImagePaths.arMapIcon : ImagePaths.cameraIcon,
+        width: AppBarConstants.toggleIconSize,
+        height: AppBarConstants.toggleIconSize,
+      ),
+      onPressed: onPressed,
+    );
+  }
+}
+
+// ==================== LOADING SCREEN COMPONENTS ====================
+
+class LoadingScreen extends StatelessWidget {
+  final String locationStatus;
+  final VoidCallback onDemoModePressed;
+  
+  const LoadingScreen({
+    super.key,
+    required this.locationStatus,
+    required this.onDemoModePressed,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.green[900]!, Colors.green[800]!, Colors.grey[900]!],
+          colors: _getGradientColors(),
         ),
       ),
       child: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-              strokeWidth: 3),
-          const SizedBox(height: 20),
-          Text(_locationStatus,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.white)),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _useDemoMode,
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 12)),
-            child: const Text('Try Demo Mode First'),
-          ),
-        ]),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const LoadingIndicator(),
+            const SizedBox(height: LoadingScreenConstants.spacingSmall),
+            LocationStatusText(status: locationStatus),
+            const SizedBox(height: LoadingScreenConstants.spacingSmall),
+            DemoModeButton(onPressed: onDemoModePressed),
+          ],
+        ),
       ),
     );
   }
+  
+  List<Color> _getGradientColors() {
+    return [
+      Colors.green[900]!,
+      Colors.green[800]!,
+      Colors.grey[900]!,
+    ];
+  }
+}
+
+class LoadingIndicator extends StatelessWidget {
+  const LoadingIndicator({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return const CircularProgressIndicator(
+      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+      strokeWidth: LoadingScreenConstants.indicatorStrokeWidth,
+    );
+  }
+}
+
+class LocationStatusText extends StatelessWidget {
+  final String status;
+  
+  const LocationStatusText({super.key, required this.status});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      status,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: LoadingScreenConstants.statusTextFontSize,
+        color: Colors.white,
+      ),
+    );
+  }
+}
+
+class DemoModeButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  
+  const DemoModeButton({super.key, required this.onPressed});
+  
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(
+          horizontal: LoadingScreenConstants.buttonHorizontalPadding,
+          vertical: LoadingScreenConstants.buttonVerticalPadding,
+        ),
+      ),
+      child: const Text('Try Demo Mode First'),
+    );
+  }
+}
+
+// ==================== CONSTANTS ====================
+
+class AppBarConstants {
+  static const String arTitle = 'AR Veggie Hunt';
+  static const String mapTitle = 'Veggie Hunt Map';
+  static const double collectionIconSize = 26;
+  static const double toggleIconSize = 28;
+  static const double badgeFontSize = 10;
+}
+
+class LoadingScreenConstants {
+  static const double indicatorStrokeWidth = 3;
+  static const double statusTextFontSize = 16;
+  static const double buttonHorizontalPadding = 30;
+  static const double buttonVerticalPadding = 12;
+  static const double spacingSmall = 20;
+}
+
+class ImagePaths {
+  static const String collectionIcon = 'assets/images/collect.png';
+  static const String arMapIcon = 'assets/images/armap.png';
+  static const String cameraIcon = 'assets/images/cam1.png';
+}
+
 
   Widget _buildPermissionScreen() {
     return Container(
