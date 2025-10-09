@@ -1682,45 +1682,130 @@ class ConfettiParticle {
     required this.opacity,
     required this.life,
   });
-
+  
+  // Factory constructor
   factory ConfettiParticle.random(Random random) {
     return ConfettiParticle(
       x: random.nextDouble(),
-      y: random.nextDouble() * 1.5 - 0.5, // Start above the screen
-      speed: random.nextDouble() * 0.5 + 0.2,
-      rotation: random.nextDouble() * 2 * pi,
-      rotationSpeed: random.nextDouble() * 0.1 - 0.05,
-      width: random.nextDouble() * 8 + 4,
-      height: random.nextDouble() * 3 + 2,
-      opacity: random.nextDouble() * 0.5 + 0.5,
+      y: _calculateStartY(random),
+      speed: _calculateSpeed(random),
+      rotation: _calculateRotation(random),
+      rotationSpeed: _calculateRotationSpeed(random),
+      width: _calculateWidth(random),
+      height: _calculateHeight(random),
+      opacity: _calculateOpacity(random),
       life: random.nextDouble(),
     );
   }
-
+  
+  // Update method
   void update(double animationValue, Size size) {
-    // Move particle down
-    y += speed * 0.01;
-
-    // Update rotation
+    _moveDown();
+    _rotate();
+    _advanceLife();
+    _updateOpacityFromLife();
+    _resetIfOffScreen();
+  }
+  
+  // Private update methods
+  void _moveDown() {
+    y += speed * ConfettiConstants.speedMultiplier;
+  }
+  
+  void _rotate() {
     rotation += rotationSpeed;
-
-    // Update life cycle
-    life += 0.01;
-    if (life > 1.0) life = 0.0;
-
-    // Calculate opacity based on life
-    opacity = 0.7 * (1.0 - life);
-
-    // Reset particle when it goes off screen
-    if (y > 1.5) {
-      y = -0.5;
-      x = _random.nextDouble();
-      speed = _random.nextDouble() * 0.5 + 0.2;
-      rotationSpeed = _random.nextDouble() * 0.1 - 0.05;
-      opacity = _random.nextDouble() * 0.5 + 0.5;
-      life = _random.nextDouble();
+  }
+  
+  void _advanceLife() {
+    life += ConfettiConstants.lifeIncrement;
+    if (life > ConfettiConstants.maxLife) {
+      life = ConfettiConstants.minLife;
     }
   }
-
+  
+  void _updateOpacityFromLife() {
+    opacity = ConfettiConstants.opacityFactor * (ConfettiConstants.maxLife - life);
+  }
+  
+  void _resetIfOffScreen() {
+    if (y > ConfettiConstants.resetYThreshold) {
+      _resetParticle();
+    }
+  }
+  
+  void _resetParticle() {
+    y = ConfettiConstants.resetYPosition;
+    x = _random.nextDouble();
+    speed = _calculateSpeed(_random);
+    rotationSpeed = _calculateRotationSpeed(_random);
+    opacity = _calculateOpacity(_random);
+    life = _random.nextDouble();
+  }
+  
+  // Random generator
   Random get _random => Random();
+  
+  // Static calculation methods
+  static double _calculateStartY(Random random) {
+    return random.nextDouble() * ConfettiConstants.startYMax - ConfettiConstants.startYMin.abs();
+  }
+  
+  static double _calculateSpeed(Random random) {
+    return random.nextDouble() * (ConfettiConstants.speedMax - ConfettiConstants.speedMin) 
+        + ConfettiConstants.speedMin;
+  }
+  
+  static double _calculateRotation(Random random) {
+    return random.nextDouble() * ConfettiConstants.rotationMax;
+  }
+  
+  static double _calculateRotationSpeed(Random random) {
+    return random.nextDouble() * (ConfettiConstants.rotationSpeedMax - ConfettiConstants.rotationSpeedMin)
+        + ConfettiConstants.rotationSpeedMin;
+  }
+  
+  static double _calculateWidth(Random random) {
+    return random.nextDouble() * (ConfettiConstants.widthMax - ConfettiConstants.widthMin)
+        + ConfettiConstants.widthMin;
+  }
+  
+  static double _calculateHeight(Random random) {
+    return random.nextDouble() * (ConfettiConstants.heightMax - ConfettiConstants.heightMin)
+        + ConfettiConstants.heightMin;
+  }
+  
+  static double _calculateOpacity(Random random) {
+    return random.nextDouble() * (ConfettiConstants.opacityMax - ConfettiConstants.opacityMin)
+        + ConfettiConstants.opacityMin;
+  }
+}
+
+// ==================== CONSTANTS ====================
+
+class ConfettiConstants {
+  static const double startYMin = -0.5;
+  static const double startYMax = 1.5;
+  static const double resetYThreshold = 1.5;
+  static const double resetYPosition = -0.5;
+  
+  static const double speedMin = 0.2;
+  static const double speedMax = 0.7;
+  static const double speedMultiplier = 0.01;
+  
+  static const double rotationMax = 2 * pi;
+  static const double rotationSpeedMin = -0.05;
+  static const double rotationSpeedMax = 0.05;
+  
+  static const double widthMin = 4;
+  static const double widthMax = 12;
+  static const double heightMin = 2;
+  static const double heightMax = 5;
+  
+  static const double opacityMin = 0.5;
+  static const double opacityMax = 1.0;
+  static const double opacityFactor = 0.7;
+  
+  static const double lifeIncrement = 0.01;
+  static const double maxLife = 1.0;
+  static const double minLife = 0.0;
 }
