@@ -72,63 +72,114 @@ class _DatabaseViewerState extends State<DatabaseViewer> {
       });
     }
   }
+// ==================== USER DELETION METHODS ====================
 
-  Future<void> _deleteUser(int userId, String username) async {
-    try {
-      final userToDelete = _users.firstWhere((user) => user['id'] == userId);
-      if (userToDelete['email'] == 'admin@gmail.com') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot delete the super admin account.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
-      bool? shouldDelete = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Delete User'),
-            content: Text('Are you sure you want to delete user "$username"?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red,
-                ),
-                child: const Text('Delete'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (shouldDelete == true) {
-        await _databaseHelper.deleteUser(userId);
-        await _loadData();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('User "$username" deleted successfully.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error deleting user: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+Future<void> _deleteUser(int userId, String username) async {
+  try {
+    final userToDelete = _findUserById(userId);
+    
+    if (_isSuperAdmin(userToDelete)) {
+      _showSuperAdminError();
+      return;
     }
+
+    final bool? shouldDelete = await _showDeleteConfirmationDialog(username);
+    
+    if (shouldDelete == true) {
+      await _performUserDeletion(userId, username);
+    }
+  } catch (e) {
+    _showDeletionError(e);
   }
+}
+
+// Helper method to find user by ID
+Map<String, dynamic> _findUserById(int userId) {
+  return _users.firstWhere((user) => user['id'] == userId);
+}
+
+// Helper method to check if user is super admin
+bool _isSuperAdmin(Map<String, dynamic> user) {
+  return user['email'] == 'admin@gmail.com';
+}
+
+// Helper method to show super admin error
+void _showSuperAdminError() {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Cannot delete the super admin account.'),
+      backgroundColor: Colors.red,
+    ),
+  );
+}
+
+// Helper method to show delete confirmation dialog
+Future<bool?> _showDeleteConfirmationDialog(String username) async {
+  return showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Delete User'),
+        content: Text('Are you sure you want to delete user "$username"?'),
+        actions: _buildDialogActions(),
+      );
+    },
+  );
+}
+
+// Helper method to build dialog actions
+List<Widget> _buildDialogActions() {
+  return [
+    _buildCancelButton(),
+    _buildDeleteButton(),
+  ];
+}
+
+// Helper method to build cancel button
+TextButton _buildCancelButton() {
+  return TextButton(
+    onPressed: () => Navigator.of(context).pop(false),
+    child: const Text('Cancel'),
+  );
+}
+
+// Helper method to build delete button
+TextButton _buildDeleteButton() {
+  return TextButton(
+    onPressed: () => Navigator.of(context).pop(true),
+    style: TextButton.styleFrom(
+      foregroundColor: Colors.red,
+    ),
+    child: const Text('Delete'),
+  );
+}
+
+// Helper method to perform user deletion
+Future<void> _performUserDeletion(int userId, String username) async {
+  await _databaseHelper.deleteUser(userId);
+  await _loadData();
+  _showDeletionSuccess(username);
+}
+
+// Helper method to show deletion success message
+void _showDeletionSuccess(String username) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('User "$username" deleted successfully.'),
+      backgroundColor: Colors.green,
+    ),
+  );
+}
+
+// Helper method to show deletion error
+void _showDeletionError(dynamic error) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Error deleting user: $error'),
+      backgroundColor: Colors.red,
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
