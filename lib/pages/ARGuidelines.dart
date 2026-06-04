@@ -17,4 +17,3 @@ enum TutorialTarget {
   features,
   menu,
   profile,
-}
