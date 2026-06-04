@@ -833,12 +833,11 @@ class _IdentificationQuizPageState extends State<IdentificationQuizPage>
       ),
     );
   }
-
-  Widget _buildLevelCompleteScreen() {
+Widget _buildLevelCompleteScreen() {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white), // More realistic iOS-style arrow
           onPressed: () {
             Navigator.pop(context);
           },
@@ -850,6 +849,7 @@ class _IdentificationQuizPageState extends State<IdentificationQuizPage>
         backgroundColor: _getLevelColor(currentLevel),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
       ),
       body: Stack(
         children: [
@@ -876,8 +876,8 @@ class _IdentificationQuizPageState extends State<IdentificationQuizPage>
                     center: Alignment.center,
                     radius: _scaleAnimation.value,
                     colors: [
+                      _getLevelColor(currentLevel).withOpacity(0.15),
                       _getLevelColor(currentLevel).withOpacity(0.05),
-                      _getLevelColor(currentLevel).withOpacity(0.01),
                       Colors.transparent,
                     ],
                   ),
@@ -887,58 +887,234 @@ class _IdentificationQuizPageState extends State<IdentificationQuizPage>
           ),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.85),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.95),
+                  Colors.white.withOpacity(0.9),
+                ],
+              ),
             ),
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Animated icon with continuous scale and bounce effects
+                    // Animated trophy icon with enhanced effects
                     AnimatedBuilder(
                       animation: _bounceController,
                       builder: (context, child) {
                         return Transform.translate(
-                          offset: Offset(0, _bounceAnimation.value),
+                          offset: Offset(0, _bounceAnimation.value * 0.3),
                           child: Transform.scale(
-                            scale: _scaleAnimation.value,
+                            scale: 1 + (_scaleAnimation.value - 1) * 0.5,
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    _getLevelColor(currentLevel).withOpacity(0.2),
+                                    Colors.transparent,
+                                  ],
+                                  radius: 1.5,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.emoji_events,
+                                size: 130,
+                                color: _colorAnimation.value,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 10,
+                                    color: _colorAnimation.value.withOpacity(0.5),
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Success animation with checkmark
+                    AnimatedBuilder(
+                      animation: _scaleController,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _getLevelColor(currentLevel).withOpacity(0.15),
+                            ),
                             child: Icon(
-                              Icons.emoji_events,
-                              size: 120,
-                              color: _colorAnimation.value,
+                              Icons.check_circle_outline,
+                              size: 60,
+                              color: _getLevelColor(currentLevel),
                             ),
                           ),
                         );
                       },
                     ),
                     const SizedBox(height: 30),
-                    // Bouncing title text
+                    
+                    // Bouncing title text with better animation
                     AnimatedBuilder(
                       animation: _bounceController,
                       builder: (context, child) {
                         return Transform.translate(
-                          offset: Offset(0, _bounceAnimation.value * 0.5),
-                          child: Text(
-                            '${_getLevelTitle(currentLevel)} Completed!',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: _getLevelColor(currentLevel),
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 5,
-                                  color: _getLevelColor(currentLevel)
-                                      .withOpacity(0.3),
-                                  offset: const Offset(2, 2),
+                          offset: Offset(0, _bounceAnimation.value * 0.2),
+                          child: Column(
+                            children: [
+                              Text(
+                                '${_getLevelTitle(currentLevel)}',
+                                style: TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                  color: _getLevelColor(currentLevel),
+                                  shadows: [
+                                    Shadow(
+                                      blurRadius: 8,
+                                      color: _getLevelColor(currentLevel).withOpacity(0.4),
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Complete! 🎉',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w600,
+                                  color: _getLevelColor(currentLevel).withOpacity(0.8),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         );
                       },
                     ),
+                    
+                    const SizedBox(height: 40),
+                    
+                    // Action buttons
+                    Column(
+                      children: [
+                        // Next level button
+                        if (currentLevel < _totalLevels)
+                          ElevatedButton(
+                            onPressed: () {
+                              _goToNextLevel();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _getLevelColor(currentLevel),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              elevation: 5,
+                              shadowColor: _getLevelColor(currentLevel).withOpacity(0.5),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'Next Level',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Icon(Icons.arrow_forward_ios, size: 18), // Matching arrow style
+                              ],
+                            ),
+                          ),
+                        
+                        if (currentLevel < _totalLevels)
+                          const SizedBox(height: 15),
+                        
+                        // Home button
+                        OutlinedButton(
+                          onPressed: () {
+                            _goToHomeScreen();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _getLevelColor(currentLevel),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 16,
+                            ),
+                            side: BorderSide(
+                              color: _getLevelColor(currentLevel),
+                              width: 2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.home, size: 20),
+                              const SizedBox(width: 10),
+                              const Text(
+                                'Back to Home',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 30),
+                    
+                    // Score display (optional - add if you have scoring system)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getLevelColor(currentLevel).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '★ Level Complete! ★',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _getLevelColor(currentLevel),
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+}
                     const SizedBox(height: 30),
                     // Animated score display
                     AnimatedBuilder(

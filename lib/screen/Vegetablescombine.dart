@@ -1345,79 +1345,268 @@ class _VegetableCombinePageState extends State<VegetableCombinePage>
       ),
     );
   }
-
-  Widget _buildDishSuggestionCard(Map<String, dynamic> dish) {
-    final matchPercentage = (dish['matchScore'] * 100).toInt();
-    final isCompleteMatch =
-        dish['missingVegs'].isEmpty && dish['proteinMatches'];
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+Widget _buildDishSuggestionCard(Map<String, dynamic> dish) {
+  final matchPercentage = (dish['matchScore'] * 100).toInt();
+  final isCompleteMatch = dish['missingVegs'].isEmpty && dish['proteinMatches'];
+  final cardColors = _getCardColors(isCompleteMatch);
+  
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: _buildCardDecoration(cardColors),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _onDishCardTap(dish),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCompleteMatch ? Colors.green[300]! : Colors.orange[300]!,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  dish['name'],
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.brown[800],
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color:
-                      isCompleteMatch ? Colors.green[100] : Colors.orange[100],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isCompleteMatch ? Icons.check_circle : Icons.info,
-                      size: 14,
-                      color: isCompleteMatch
-                          ? Colors.green[700]
-                          : Colors.orange[700],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$matchPercentage% match',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isCompleteMatch
-                            ? Colors.green[700]
-                            : Colors.orange[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildCardHeader(dish, matchPercentage, isCompleteMatch, cardColors),
+              const SizedBox(height: 8),
+              _buildMatchDetails(dish, isCompleteMatch, cardColors),
+              if (!isCompleteMatch) ...[
+                const SizedBox(height: 12),
+                _buildMissingIngredients(dish['missingVegs'], cardColors),
+              ],
+              const SizedBox(height: 12),
+              _buildActionButton(dish, isCompleteMatch, cardColors),
             ],
           ),
-          const SizedBox(height: 8),
+        ),
+      ),
+    ),
+  );
+}
+
+// Helper method to get card colors based on match status
+Map<String, dynamic> _getCardColors(bool isCompleteMatch) {
+  return {
+    'primary': isCompleteMatch ? Colors.green : Colors.orange,
+    'background': isCompleteMatch ? Colors.green[50] : Colors.orange[50],
+    'border': isCompleteMatch ? Colors.green[300] : Colors.orange[300],
+    'text': isCompleteMatch ? Colors.green[700] : Colors.orange[700],
+  };
+}
+
+// Helper method to build card decoration
+BoxDecoration _buildCardDecoration(Map<String, dynamic> colors) {
+  return BoxDecoration(
+    color: Colors.white.withOpacity(0.95),
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: colors['border']!, width: 2),
+    boxShadow: [
+      BoxShadow(
+        color: colors['primary']!.withOpacity(0.15),
+        blurRadius: 8,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  );
+}
+
+// Helper method to build card header
+Widget _buildCardHeader(
+  Map<String, dynamic> dish,
+  int matchPercentage,
+  bool isCompleteMatch,
+  Map<String, dynamic> colors,
+) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Expanded(
+        child: Text(
+          dish['name'],
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.brown[800],
+            height: 1.3,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      _buildMatchBadge(matchPercentage, isCompleteMatch, colors),
+    ],
+  );
+}
+
+// Helper method to build match badge
+Widget _buildMatchBadge(
+  int matchPercentage,
+  bool isCompleteMatch,
+  Map<String, dynamic> colors,
+) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: colors['background'],
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: colors['primary']!.withOpacity(0.3),
+        width: 0.5,
+      ),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          isCompleteMatch ? Icons.check_circle : Icons.trending_up,
+          size: 14,
+          color: colors['text'],
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$matchPercentage% Match',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: colors['text'],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper method to build match details
+Widget _buildMatchDetails(
+  Map<String, dynamic> dish,
+  bool isCompleteMatch,
+  Map<String, dynamic> colors,
+) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (dish['proteinMatches'])
+        _buildDetailChip(
+          icon: Icons.fitness_center,
+          label: 'Protein match found',
+          color: Colors.green,
+        ),
+      if (dish['proteinMatches'] && dish['missingVegs'].isNotEmpty)
+        const SizedBox(height: 6),
+      if (!isCompleteMatch && dish['missingVegs'].isNotEmpty)
+        Text(
+          'Add these to complete:',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+    ],
+  );
+}
+
+// Helper method to build detail chip
+Widget _buildDetailChip({
+  required IconData icon,
+  required String label,
+  required MaterialColor color,
+}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: color[700]),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: color[700],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper method to build missing ingredients
+Widget _buildMissingIngredients(
+  List<String> missingVegs,
+  Map<String, dynamic> colors,
+) {
+  return Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: missingVegs.map((veg) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: colors['background'],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colors['primary']!.withOpacity(0.3),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.remove_circle_outline,
+              size: 12,
+              color: colors['text'],
+            ),
+            const SizedBox(width: 6),
+            Text(
+              veg,
+              style: TextStyle(
+                fontSize: 12,
+                color: colors['text'],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
+
+// Helper method to build action button
+Widget _buildActionButton(
+  Map<String, dynamic> dish,
+  bool isCompleteMatch,
+  Map<String, dynamic> colors,
+) {
+  return Align(
+    alignment: Alignment.centerRight,
+    child: TextButton.icon(
+      onPressed: () => _onViewRecipeTap(dish),
+      icon: Icon(
+        Icons.restaurant_menu,
+        size: 16,
+        color: colors['primary'],
+      ),
+      label: Text(
+        isCompleteMatch ? 'View Recipe' : 'See Suggestions',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: colors['primary'],
+        ),
+      ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+    ),
+  );
+}
+
 
           // Match Information
           Row(
